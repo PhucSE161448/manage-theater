@@ -1,0 +1,404 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.app {
+  padding: 20px;
+}
+
+h1 {
+  margin: 20px 0;
+  color: #333;
+}
+
+.stage {
+  background-color: #f39c12;
+  color: white;
+  font-weight: bold;
+  padding: 20px;
+  margin: 20px auto;
+  width: 100%;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.seat-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px auto;
+  background-color: #ecf0f1;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid black;
+  width: 80%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.side {
+  display: flex;
+  justify-content: center;
+}
+
+.left,
+.right {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+.left {
+  margin-right: 10px;
+}
+
+.right {
+  margin-left: 10px;
+}
+
+.seat {
+  width: 40px;
+  height: 40px;
+  margin: 5px;
+  background-color: #95a5a6;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
+
+.seat.selected {/* Màu ghế đã chọn */ /* Màu chữ */
+  cursor: not-allowed; /* Hiển thị con trỏ không cho bấm */
+  position: relative; 
+}
+.seat.selected::after {
+  content: "X"; /* Hiển thị dấu X */
+  font-size: 30px;
+  color: black;
+  position: absolute;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.seat.yellow {
+  background-color: #ff3333; /* Yellow for specific rows */
+}
+
+.seat.pink {
+  background-color: #3498db; /* Pink for rows K, L */
+}
+
+.seat.purple {
+  background-color: #f06292; /* Purple for row M */
+}
+
+.seat.blue {
+  background-color: #f5a003; /* Blue for rows I, J and specific seats 17 and 19 */
+}
+
+.seat.disabled {
+  background-color: #7f8c8d; /* Màu xám cho ghế không thể chọn */
+  cursor: not-allowed;
+}
+
+.seat.disabled:hover {
+  background-color: #7f8c8d; /* Không thay đổi khi hover */
+}
+
+.aisle {
+  width: 40px;
+}
+.row-label {
+  font-size: xx-large;
+  font-weight: bold; /* Làm chữ in đậm */
+  text-align: center; /* Căn giữa theo chiều ngang */
+  display: flex; /* Kết hợp với justify-content và align-items */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  height: 120%; 
+  width: 50px;
+  margin-top: 20px;/* Đảm bảo chiều cao chiếm toàn bộ vùng chứa */
+}
+.door-label {
+  width: 200px;
+  height: 50px;
+  font-size: x-large;
+  background-color: #95a5a6;
+  color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 5px 0;
+}
+.payment-btn {
+  background-color: #e74c3c;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.payment-btn:hover {
+  background-color: #c0392b;
+}
+
+.door-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 50px; /* Tăng khoảng cách từ trên */
+  margin-left: 10px; /* Giảm margin bên trái */
+  margin-right: 10px; /* Giảm margin bên phải */
+  position: relative; /* Để sử dụng cho vị trí của các đường gạch ngang */
+}
+
+.door {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0px;
+  position: relative;
+}
+.side-a {
+  width: 45%;
+  margin: 0px;
+}
+
+.side-a .seat {
+  background-color: #7f8c8d; /* Màu xám cho ghế không thể chọn */
+  cursor: not-allowed;
+}
+
+.door-icon {
+  font-size: 80px; /* Điều chỉnh kích thước của biểu tượng */
+  color: #000;
+}
+.door::before,
+.door::after {
+  content: "";
+  position: absolute;
+  width: 50%;
+  height: 2px;
+  background-color: black;
+  top: 100%;
+}
+
+.door::before {
+  left: 0;
+}
+
+.door::after {
+  right: 0;
+}
+
+.floor-info {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.floor-info .label {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.floor-info .room {
+  font-size: 16px;
+  font-style: italic;
+  color: #7f8c8d;
+}
+/* Đường gạch ngang */
+.horizontal-line {
+  width: 100%;
+  height: 2px;
+  background-color: #000;
+  margin: 20px 0; /* Điều chỉnh khoảng cách từ trên và dưới */
+}
+.center-section, .technical-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Căn giữa theo chiều ngang */
+  justify-content: center; /* Căn giữa theo chiều dọc */
+}
+/* Phần chính giữa */
+.center-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0px;
+}
+
+.section-box {
+  width: 200px;
+  height: 50px;
+  background-color: #95a5a6;
+  color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 5px 0; /* Khoảng cách giữa các ô */
+}
+
+/* Phòng Kỹ Thuật Âm Thanh */
+.technical-room {
+  display: flex;
+  align-items: center; /* Căn giữa các phần tử theo chiều dọc */
+  justify-content: center; /* Căn giữa container theo chiều ngang */
+  width: 100%;
+  margin-top: 20px;
+}
+
+.room-name {
+  width: 150px;
+  height: 100px;
+  font-size: large;
+  background-color: #FF6633;
+  color: black;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 5px 0; /* Khoảng cách giữa các ô */
+  margin-bottom: 10px;
+  text-align: center;
+  flex-basis: 100%; /* Đảm bảo tên phòng chiếm toàn bộ không gian ngang */
+}
+
+.room-seats {
+  display: flex;
+  justify-content: space-between; /* Đặt các ghế ra hai bên */
+  /* Cung cấp một không gian nhất định cho các ghế */
+}
+.side-left {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Đặt các ghế theo cột */  /* Đặt bên trái */
+}
+.center--section {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* Chia làm 7 cột đều nhau */
+  gap: 10px; /* Khoảng cách giữa các ô */
+  padding: 20px;
+  width: 100%;
+}
+
+.grid-item {
+  padding: 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  display: grid;
+  justify-content: center;
+}
+.grid-item3 {
+  padding: 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  justify-content: flex-end;
+}
+.row2{
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  margin-bottom: 15px;
+  width: 100%;
+}
+.grid-item2 {
+  padding: 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  justify-content: flex-start;
+}
+.room-name1 {
+  width: 150px;
+  height: 100px;
+  font-size: x-large;
+  background-color: #7f8c8d;
+  color: black;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 5px 0; /* Khoảng cách giữa các ô */
+  margin-bottom: 10px;
+  text-align: center;
+  flex-basis: 100%; /* Đảm bảo tên phòng chiếm toàn bộ không gian ngang */
+}
+.price-container {
+  flex: 1; /* Tăng độ rộng của price-container */
+  display: flex;
+  flex-direction: column; /* Hiển thị các mục giá theo chiều dọc */
+  align-items: flex-start; /* Căn các mục sang bên phải */
+  padding: 30px;
+  margin-top:10%;
+}
+
+.price-item {
+  margin-bottom: 10px;
+  font-size: 30px;
+  font-weight: bold;
+}
+.seat-map-container {
+  display: flex; /* Sử dụng flexbox để căn ngang */
+  justify-content: space-between; /* Tạo khoảng cách giữa seat-map và price-container */
+  align-items: flex-start; /* Căn chỉnh theo chiều dọc */
+}
+.color-box {
+  display: inline-block;
+  width: 20px; /* Chiều rộng */
+  height: 20px; /* Chiều cao */
+  border-radius: 4px; /* Bo góc */
+  margin-right: 5px; /* Khoảng cách giữa ô màu và chữ */
+  vertical-align: middle; /* Căn giữa với chữ */
+}
+
+.color-box.red {
+  background-color: #ff3333;
+}
+
+.color-box.yellow {
+  background-color: #f5a003;
+}
+
+.color-box.blue {
+  background-color: #3498db;
+}
+
+.color-box.pink {
+  background-color: #f06292;
+}
+.payment-box {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
