@@ -20,22 +20,23 @@ const rows = [
   // Thêm các hàng khác nếu cần
 ];
 const seatPrices = {
-  red: 300, // Ghế màu đỏ
-  yellow: 250, // Ghế màu vàng
-  green: 200, // Ghế màu xanh
-  pink: 150, // Ghế màu hồng
+  red: 300000, // Ghế màu đỏ
+  yellow: 250000, // Ghế màu vàng
+  green: 200000, // Ghế màu xanh
+  pink: 150000, // Ghế màu hồng
 };
 function App() {
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const handleSelectSeat = (row, side, seat) => {
+  const handleSelectSeat = (row, side, seat, color, price) => {
     const seatKey = `${row}-${side}-${seat}`;
     setSelectedSeats((prevSeats) => {
-      if (prevSeats.includes(seatKey)) {
+      const exists = prevSeats.find((s) => s.key === seatKey);
+      if (exists) {
         // Nếu ghế đã được chọn, xóa khỏi danh sách
-        return prevSeats.filter((s) => s !== seatKey);
+        return prevSeats.filter((s) => s.key !== seatKey);
       } else {
         // Nếu ghế chưa được chọn, thêm vào danh sách
-        return [...prevSeats, seatKey];
+        return [...prevSeats, { key: seatKey, row, side, seat, color, price }];
       }
     });
   };
@@ -106,7 +107,31 @@ function App() {
                           } ${isDisabledSeat(rowData.row) ? "disabled" : ""}`}
                           onClick={() =>
                             !isDisabledSeat(rowData.row) &&
-                            handleSelectSeat(rowData.row, "L", seat)
+                            handleSelectSeat(
+                              rowData.row,
+                              "L", // Hoặc "R" cho bên phải
+                              seat,
+                              isBlueRow(rowData.row)
+                                ? "yellow"
+                                : isPinkRow(rowData.row)
+                                ? "blue"
+                                : isPurpleRow(rowData.row)
+                                ? "pink"
+                                : isYellowRow(rowData.row) // Kiểm tra dòng màu đỏ
+                                ? "red"
+                                : "green", // Màu mặc định
+                              seatPrices[
+                                isBlueRow(rowData.row)
+                                  ? "yellow"
+                                  : isPinkRow(rowData.row)
+                                  ? "blue"
+                                  : isPurpleRow(rowData.row)
+                                  ? "pink"
+                                  : isYellowRow(rowData.row) // Kiểm tra màu đỏ
+                                  ? "red"
+                                  : "green"
+                              ] // Giá dựa vào màu
+                            )
                           }
                         >
                           {isDisabledSeat(rowData.row) ||
@@ -151,7 +176,21 @@ function App() {
                         } ${isDisabledSeat(rowData.row) ? "disabled" : ""}`}
                         onClick={() =>
                           !isDisabledSeat(rowData.row) &&
-                          handleSelectSeat(rowData.row, "R", seat)
+                          handleSelectSeat(
+                            rowData.row,
+                            "R", // Hoặc "R" cho bên phải
+                            seat,
+                            isYellowRow(rowData.row)
+                              ? "yellow"
+                              : isPinkRow(rowData.row)
+                              ? "pink"
+                              : isPurpleRow(rowData.row)
+                              ? "purple"
+                              : "green", // Màu mặc định
+                            seatPrices[
+                              isYellowRow(rowData.row) ? "yellow" : "green"
+                            ] // Giá dựa vào màu
+                          )
                         }
                       >
                         {isDisabledSeat(rowData.row) ||
@@ -529,7 +568,8 @@ function App() {
                   {selectedSeats.length > 0 ? (
                     selectedSeats.map((seat, index) => (
                       <li key={index}>
-                        {seat.seat} ({seat.color}) - {seat.price} VND
+                        {seat.row}-{seat.side}-{seat.seat} ({seat.color}) -{" "}
+                        {seat.price} VND
                       </li>
                     ))
                   ) : (
@@ -539,7 +579,7 @@ function App() {
               </div>
 
               <div className="total-price">
-                <h4>Tổng tiền: {totalPrice} VND</h4>
+                <h4>Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VND</h4>
               </div>
 
               <button className="payment-btn" onClick={handlePayment}>
