@@ -1,110 +1,110 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css"; // Tạo file CSS dựa trên phần style bạn cung cấp
 
 const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
+  const [seatData, setSeatData] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
+
+  useEffect(() => {
+    fetch("https://localhost:7170/api/Seat")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch seat data");
+        }
+        return response.json();
+      })
+      .then((result) => {
+        const seatArray = result.data || []; // Trích xuất mảng "data"
+        setSeatData(seatArray);
+      })
+      .catch((error) => {
+        console.error("Error fetching seat data:", error);
+      });
+  }, []);
 
   const handleSeatClick = (rowChar, col, color) => {
     const seatId = `${rowChar}${col}`;
-    const seatInfo = `${rowChar} - ${col} - ${color}`; // Lưu thông tin ghế (hàng - cột - màu)
+    const seatInfo = `${rowChar} - ${col} - ${color}`;
 
     if (selectedSeats.includes(seatInfo)) {
-      setSelectedSeats(selectedSeats.filter((seat) => seat !== seatInfo)); // Xóa nếu đã chọn
+      setSelectedSeats(selectedSeats.filter((seat) => seat !== seatInfo));
     } else {
-      setSelectedSeats([...selectedSeats, seatInfo]); // Thêm nếu chưa chọn
+      setSelectedSeats([...selectedSeats, seatInfo]);
     }
 
-    onSeatSelect(seatId, rowChar, col, color); // Gọi hàm khi chọn ghế
+    onSeatSelect(seatId, rowChar, col, color);
   };
 
   const renderSeatLayout = () => {
-    const layout = []; // Đếm số cột thật sự khi bỏ qua cột ký tự
+    const layout = [];
 
     for (let row = 1; row <= rows; row++) {
-      const rowChar = String.fromCharCode(64 + row); // Tạo ký tự hàng (A, B, C, ...)
+      const rowChar = String.fromCharCode(64 + row);
+
       for (let col = 1; col <= cols; col++) {
         let className = "seat";
         let content = "";
         let color = "";
-
-        const isInvalidSeat =
-          (rowChar === "A" && col >= 19 && col <= 22) ||
-          (rowChar === "B" && (col === 17 || (col >= 19 && col <= 22))) ||
-          ((rowChar === "D" ||
-            rowChar === "F" ||
-            rowChar === "H" ||
-            rowChar === "J" ||
-            rowChar === "L") &&
-            col === 17) ||
-          (rowChar === "N" &&
-            (col <= 4 || col === 17 || (col >= 19 && col <= 22)));
-
-        if (isInvalidSeat) {
-          layout.push(<div key={`${row}-${col}`} className="seat empty"></div>);
-          continue;
+        let isHidden = false;
+        let isBooked = false;
+        if (hiddenSeats[rowChar]?.includes(col)) {
+          isHidden = true;
         }
 
-        // Kiểm tra màu ghế theo quy tắc đã chỉ định
-        if (
-          rowChar === "A" ||
-          rowChar === "B" ||
-          (rowChar === "C" && col >= 1 && col <= 17) ||
-          (rowChar >= "D" && rowChar <= "I" && col >= 6 && col <= 17)
-        ) {
-          color = "red";
-        } else {
-          color = "yellow";
+        const seat = Array.isArray(seatData)
+          ? seatData.find((s) => s.rowChar === rowChar && s.colNumber === col)
+          : null;
+
+        if (seat) {
+          color = seat.seatColor?.color || "";
+          isBooked = seat.isBooked;
         }
 
-        // Nếu là cột ký tự (cột 5 hoặc 18), hiển thị ký tự hàng
-        if (col === 5 || col === 18) {
+        if (charCols.includes(col)) {
           className += " char";
-          content = rowChar; // Hiển thị ký tự hàng (A, B, C, ...)
-          color = ""; // Không áp dụng màu cho cột ký tự
+          content = rowChar;
+          color = "";
         } else {
-          // Nếu không phải cột ký tự, hiển thị số ghế
-          content = col; // Sử dụng số cột thực sự không có ký tự// Tăng số cột thực sự sau khi đã bỏ qua các cột ký tự
+          content = isHidden ? "" : col;
         }
 
-        // Kiểm tra xem ghế đã được chọn chưa
         const seatInfo = `${rowChar} - ${col} - ${color}`;
-
         if (selectedSeats.includes(seatInfo)) {
           content = "X";
-          className += " x-mark"; // Hiển thị dấu "X" nếu ghế đã được chọn
+          className += " x-mark";
         }
+        const seatStyle = isBooked
+          ? { backgroundColor: "gray" } // Màu xám nếu ghế đã được đặt
+          : color === "red"
+          ? { backgroundColor: "red" }
+          : color === "yellow"
+          ? { backgroundColor: "#f5a003" }
+          : {};
 
-        // Thêm màu sắc vào className hoặc style trực tiếp cho các ghế (trừ cột ký tự)
-        const seatStyle =
-          color === "red"
-            ? { backgroundColor: "red" }
-            : color === "yellow"
-            ? { backgroundColor: "#f5a003" }
-            : {};
-
-        // Cột ký tự không có sự kiện onClick
-        const handleClick =
-          col === 5 || col === 18
-            ? null
-            : () => handleSeatClick(rowChar, col, color);
-
-        layout.push(
-          <div
-            key={`${row}-${col}`}
-            className={className}
-            style={seatStyle} // Áp dụng màu sắc vào mỗi ghế (trừ cột ký tự)
-            onClick={handleClick} // Chỉ thêm sự kiện click vào các ghế (không vào cột ký tự)
-          >
-            {content}
-          </div>
-        );
+        if (!isHidden) {
+          layout.push(
+            <div
+              key={`${row}-${col}`}
+              className={className}
+              style={seatStyle}
+              onClick={
+                isBooked ? null : () => handleSeatClick(rowChar, col, color)
+              }
+            >
+              {content}
+            </div>
+          );
+        } else {
+          layout.push(<div key={`${row}-${col}`} className="seat empty"></div>);
+        }
       }
     }
+
     return layout;
   };
+
   return <div className="seat-layout">{renderSeatLayout()}</div>;
 };
-
 const BottomLayout = ({
   rows,
   cols,
@@ -113,37 +113,68 @@ const BottomLayout = ({
   selectedSeats,
   onSeatSelect,
 }) => {
+  const [seatsData, setSeatsData] = useState([]); // State chứa dữ liệu ghế từ API
+
+  // Gọi API để lấy dữ liệu ghế
+  useEffect(() => {
+    fetch("https://localhost:7170/api/Seat")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch seat data");
+        }
+        return response.json();
+      })
+      .then((result) => {
+        const seatArray = result.data || []; // Trích xuất mảng dữ liệu ghế
+        const filteredSeats = seatArray.filter(
+          (seat) => seat.floor === "Trên Lầu"
+        );
+        setSeatsData(filteredSeats);
+      })
+      .catch((error) => {
+        console.error("Error fetching seat data:", error);
+      });
+  }, []); // Chỉ gọi API khi component được render lần đầu
+
+  // Xử lý khi người dùng click vào ghế
   const handleBottomSeatClick = (rowChar, col, color) => {
     const seatId = `${rowChar}${col}`;
-
-    // Gọi hàm onSeatSelect từ props để xử lý ghế được chọn
     onSeatSelect(seatId, rowChar, col, color, "Trên Lầu");
   };
 
+  // Render layout ghế dưới
   const renderBottomLayout = () => {
     const layout = [];
+
     for (let row = 1; row <= rows; row++) {
       const rowChar = String.fromCharCode(64 + row);
       for (let col = 1; col <= cols; col++) {
         let className = "seat";
         let content = "";
         let color = "";
-
-        if (rowChar >= "A" && rowChar <= "D") {
-          className += " blue";
-          color = "blue";
-        } else {
-          className += " pink";
-          color = "pink";
-        }
+        let isBooked = false;
+        let isHidden = false;
 
         if (hiddenSeats[rowChar]?.includes(col)) {
-          className = "seat empty";
-        } else if (charCols.includes(col)) {
-          className = "seat char";
-          content = rowChar; // Không áp dụng màu cho cột ký tự
+          isHidden = true;
+        }
+
+        // Tìm ghế trong dữ liệu từ API
+        const seat = Array.isArray(seatsData)
+          ? seatsData.find((s) => s.rowChar === rowChar && s.colNumber === col)
+          : null;
+
+        if (seat) {
+          // Nếu ghế có dữ liệu, xác định trạng thái đã đặt và màu sắc
+          isBooked = seat.isBooked;
+          color = seat.seatColor?.color || ""; // Màu mặc định nếu không có thông tin màu
+        }
+        if (charCols.includes(col)) {
+          className += " char";
+          content = rowChar;
+          color = "";
         } else {
-          content = col; // Sử dụng số cột thực sự không có ký tự
+          content = isHidden ? "" : col;
         }
         const isSelected = selectedSeats.some(
           (seat) => seat === `${rowChar} - ${col} - ${color} - Trên Lầu`
@@ -153,21 +184,38 @@ const BottomLayout = ({
           content = "X";
           className += " x-mark"; // Đánh dấu ghế đã chọn
         }
-        const handleClick =
-          col === 8 || col === 15
-            ? null
-            : () => handleBottomSeatClick(rowChar, col, color);
-        layout.push(
-          <div
-            key={`${row}-${col}`}
-            className={className}
-            onClick={handleClick} // Thêm sự kiện click
-          >
-            {content}
-          </div>
-        );
+
+        // Xử lý màu sắc ghế
+        const seatStyle = isBooked
+          ? { backgroundColor: "gray" } // Màu xám nếu ghế đã được đặt
+          : color === "blue"
+          ? { backgroundColor: "#3498db" }
+          : color === "pink"
+          ? { backgroundColor: "#eb0578" }
+          : {};
+        const isClickable = !isBooked && !charCols.includes(col);
+        // Thêm sự kiện click cho các ghế chưa được đặt và không phải là ký tự
+        const handleClick = isClickable
+          ? null
+          : () => handleBottomSeatClick(rowChar, col, color);
+
+        if (!isHidden) {
+          layout.push(
+            <div
+              key={`${row}-${col}`}
+              className={className}
+              style={seatStyle}
+              onClick={handleClick}
+            >
+              {content}
+            </div>
+          );
+        } else {
+          layout.push(<div key={`${row}-${col}`} className="seat empty"></div>);
+        }
       }
     }
+
     return layout;
   };
 
@@ -194,6 +242,7 @@ const BottomLayout = ({
     </div>
   );
 };
+
 const seatPrices = {
   red: 300000,
   yellow: 250000,
@@ -207,20 +256,15 @@ const colorNamesInVietnamese = {
   pink: "Ghế Hồng",
 };
 const App = () => {
-  const seatLayoutProps = {
-    rows: 14,
-    cols: 22,
-    hiddenSeats: {
-      A: [19, 20, 21, 22],
-      B: [17, 19, 20, 21, 22],
-      D: [17],
-      F: [17],
-      H: [17],
-      J: [17],
-      L: [17],
-      N: [1, 2, 3, 4, 17, 19, 20, 21, 22],
-    },
-    charCols: [5, 18],
+  const hiddenSeats = {
+    A: [19, 20, 21, 22],
+    B: [17, 19, 20, 21, 22],
+    D: [17],
+    F: [17],
+    H: [17],
+    J: [17],
+    L: [17],
+    N: [1, 2, 3, 4, 17, 19, 20, 21, 22],
   };
 
   const bottomLayoutProps = {
@@ -284,7 +328,13 @@ const App = () => {
 
       <div className="main-container">
         <div className="seat-layout-wrapper">
-          <SeatLayout {...seatLayoutProps} onSeatSelect={handleSeatSelect} />
+          <SeatLayout
+            rows={14}
+            cols={22}
+            hiddenSeats={hiddenSeats}
+            charCols={[5, 18]}
+            onSeatSelect={handleSeatSelect}
+          />
         </div>
         <div className="price-container-wrapper">
           <div className="layout-wrapper">
