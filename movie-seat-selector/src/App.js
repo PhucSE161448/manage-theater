@@ -23,16 +23,20 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
   }, []);
 
   const handleSeatClick = (rowChar, col, color) => {
-    const seatId = `${rowChar}${col}`;
+    const seat = seatData.find(
+      (s) => s.rowChar === rowChar && s.colNumber === col
+    );
     const seatInfo = `${rowChar} - ${col} - ${color}`;
-
-    if (selectedSeats.includes(seatInfo)) {
-      setSelectedSeats(selectedSeats.filter((seat) => seat !== seatInfo));
-    } else {
-      setSelectedSeats([...selectedSeats, seatInfo]);
+    setSelectedSeats((prevSeats) => {
+      if (prevSeats.includes(seatInfo)) {
+        return prevSeats.filter((seat) => seat !== seatInfo); // Remove if already selected
+      }
+      return [...prevSeats, seatInfo]; // Add if not selected
+    });
+    if (seat) {
+      const seatId = seat.id; // Lấy `id` ghế
+      onSeatSelect(seatId, rowChar, col, color, ""); // Gửi `seatId` thay vì thông tin chuỗi
     }
-
-    onSeatSelect(seatId, rowChar, col, color);
   };
 
   const renderSeatLayout = () => {
@@ -88,7 +92,9 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
               className={className}
               style={seatStyle}
               onClick={
-                isBooked ? null : () => handleSeatClick(rowChar, col, color)
+                charCols.includes(col) || isBooked
+                  ? null
+                  : () => handleSeatClick(rowChar, col, color)
               }
             >
               {content}
@@ -126,9 +132,7 @@ const BottomLayout = ({
       })
       .then((result) => {
         const seatArray = result.data || []; // Trích xuất mảng dữ liệu ghế
-        const filteredSeats = seatArray.filter(
-          (seat) => seat.floor === "Trên Lầu"
-        );
+        const filteredSeats = seatArray.filter((seat) => seat.floor === "2");
         setSeatsData(filteredSeats);
       })
       .catch((error) => {
@@ -138,8 +142,13 @@ const BottomLayout = ({
 
   // Xử lý khi người dùng click vào ghế
   const handleBottomSeatClick = (rowChar, col, color) => {
-    const seatId = `${rowChar}${col}`;
-    onSeatSelect(seatId, rowChar, col, color, "Trên Lầu");
+    const seat = seatsData.find(
+      (s) => s.rowChar === rowChar && s.colNumber === col
+    );
+    if (seat) {
+      const seatId = seat.id; // Lấy `id` ghế
+      onSeatSelect(seatId, rowChar, col, color, "Trên Lầu"); // Gửi `seatId` thay vì thông tin chuỗi
+    }
   };
 
   // Render layout ghế dưới
@@ -176,8 +185,10 @@ const BottomLayout = ({
         } else {
           content = isHidden ? "" : col;
         }
+        const seatInfo = { rowChar, col, color };
         const isSelected = selectedSeats.some(
-          (seat) => seat === `${rowChar} - ${col} - ${color} - Trên Lầu`
+          (seat) =>
+            seat.rowChar === rowChar && seat.col === col && seat.color === color
         );
 
         if (isSelected) {
@@ -193,11 +204,11 @@ const BottomLayout = ({
           : color === "pink"
           ? { backgroundColor: "#eb0578" }
           : {};
-        const isClickable = !isBooked && !charCols.includes(col);
         // Thêm sự kiện click cho các ghế chưa được đặt và không phải là ký tự
-        const handleClick = isClickable
-          ? null
-          : () => handleBottomSeatClick(rowChar, col, color);
+        const handleClick =
+          charCols.includes(col) || isBooked
+            ? null
+            : () => handleBottomSeatClick(rowChar, col, color);
 
         if (!isHidden) {
           layout.push(
@@ -279,26 +290,94 @@ const App = () => {
     },
     charCols: [8, 15],
   };
-
   const [selectedSeats, setSelectedSeats] = useState([]);
-
   const handleSeatSelect = (seatId, rowChar, col, color, floor) => {
-    const seatInfo = `${rowChar} - ${col} - ${color}${
-      floor ? " - " + floor : ""
-    }`;
+    const seatInfo = { seatId, rowChar, col, color, floor };
+
     setSelectedSeats((prevSeats) => {
-      if (prevSeats.includes(seatInfo)) {
-        return prevSeats.filter((seat) => seat !== seatInfo); // Remove if already selected
+      const isSelected = prevSeats.some((seat) => seat.seatId === seatId);
+
+      if (isSelected) {
+        // Nếu ghế đã được chọn, bỏ chọn
+        return prevSeats.filter((seat) => seat.seatId !== seatId);
       }
-      return [...prevSeats, seatInfo]; // Add if not selected
+
+      // Nếu chưa chọn, thêm ghế vào danh sách
+      return [...prevSeats, seatInfo];
     });
   };
+
   const calculateTotalPrice = () => {
     return selectedSeats.reduce((total, seat) => {
-      const [, , color] = seat.split(" - ");
-      return total + seatPrices[color]; // Tính tổng tiền theo màu ghế
+      // Lấy giá tiền theo màu sắc của ghế
+      const price = seatPrices[seat.color] || 0;
+      return total + price;
     }, 0);
   };
+  const [isModalOpen, setIsModalOpen] = useState(false); // State để điều khiển modal
+  const [studentName, setStudentName] = useState(""); // State cho tên học viên
+  const [selectedBranch, setSelectedBranch] = useState(""); // State cho chi nhánh
+  const [totalPrice, setTotalPrice] = useState(calculateTotalPrice()); // Tổng tiền
+
+  // Danh sách các chi nhánh trung tâm (có thể lấy từ API hoặc hardcoded)
+  const branches = ["Quận Phú Nhuận", "Quận 3", "Quận 10", "Quận Tân Bình"];
+
+  const handlePaymentClick = () => {
+    setIsModalOpen(true); // Mở modal khi nhấn thanh toán
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false); // Đóng modal
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    // Xử lý thanh toán hoặc gửi dữ liệu
+    console.log("Thanh toán thành công!", {
+      studentName,
+      selectedBranch,
+      totalPrice,
+    });
+    handleCloseModal(); // Đóng modal sau khi thanh toán
+  };
+  const handleConfirmPayment = () => {
+    // Lấy danh sách `seatId` của các ghế đã chọn
+    const selectedSeatIds = selectedSeats.map((seat) => seat.seatId);
+
+    // Tính tổng tiền
+    const totalAmount = calculateTotalPrice();
+
+    // Tạo đối tượng dữ liệu cần gửi
+    const paymentData = {
+      seats: selectedSeatIds, // Danh sách `seatId` của các ghế đã chọn
+      totalAmount: totalAmount,
+      studentName: studentName, // Tên học viên
+      selectedBranch: selectedBranch, // Tổng tiền
+    };
+    console.log(paymentData);
+    // Gửi dữ liệu qua API
+    fetch("https://localhost:7170/api/payos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(paymentData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Thanh toán thất bại!");
+        }
+        return response.json();
+      })
+      .then((result) => {
+        console.log("Thanh toán thành công!", result);
+        // Thực hiện hành động sau khi thanh toán thành công, ví dụ: đóng modal, thông báo thành công...
+      })
+      .catch((error) => {
+        console.error("Lỗi khi thanh toán:", error);
+      });
+  };
+
   return (
     <div
       style={{
@@ -363,13 +442,15 @@ const App = () => {
             ) : (
               <ul style={{ fontSize: "18px", paddingLeft: "20px" }}>
                 {selectedSeats.map((seat) => {
-                  const [rowChar, col, color, floor] = seat.split(" - ");
                   return (
-                    <li key={seat} style={{ marginBottom: "10px" }}>
-                      {`${rowChar} - ${col} - `}
-                      <span>{colorNamesInVietnamese[color]}</span>
-                      {floor && <span> - {floor}</span>}
-                      <span> - {seatPrices[color].toLocaleString()} VND</span>
+                    <li key={seat.seatId} style={{ marginBottom: "10px" }}>
+                      {`${seat.rowChar} - ${seat.col} - `}
+                      <span>{colorNamesInVietnamese[seat.color]}</span>
+                      {seat.floor && <span> - {seat.floor}</span>}
+                      <span>
+                        {" "}
+                        - {seatPrices[seat.color].toLocaleString()} VND
+                      </span>
                     </li>
                   );
                 })}
@@ -398,6 +479,7 @@ const App = () => {
                   cursor: "pointer",
                   marginLeft: "30%",
                 }}
+                onClick={handlePaymentClick}
               >
                 Thanh toán
               </button>
@@ -413,6 +495,60 @@ const App = () => {
           />
         </div>
       </div>
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Thông tin thanh toán</h3>
+            <form onSubmit={handleFormSubmit}>
+              <div className="form-group">
+                <label>Tên Học Viên:</label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="Nhập tên học viên"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Đang Học Tại Trung Tâm</label>
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  required
+                >
+                  <option value="">Chọn chi nhánh</option>
+                  {branches.map((branch, index) => (
+                    <option key={index} value={branch}>
+                      {branch}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Tổng số tiền:</label>
+                <input
+                  type="text"
+                  value={calculateTotalPrice().toLocaleString()}
+                  readOnly
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" onClick={handleConfirmPayment}>
+                  Xác nhận thanh toán
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="cancel"
+                >
+                  Hủy
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

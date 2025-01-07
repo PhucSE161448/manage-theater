@@ -147,7 +147,6 @@ input[readonly] {
   top: 10px; /* Giảm khoảng cách từ đỉnh */
   right: 10px; /* Giảm khoảng cách từ bên phải */
   width: auto;
-  margin-right: 10%;
 }
 
 .layout-wrapper {
@@ -230,4 +229,83 @@ input[readonly] {
 .seat.x-mark {
   font-size: 50px; /* Tăng kích thước của dấu X */
   color: black; /* Màu của dấu X */
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal content */
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 650px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Tiêu đề modal */
+.modal-content h3 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+/* Các trường input, select và label */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-size: 16px;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.form-group input[readonly] {
+  background-color: #f9f9f9;
+}
+
+/* Các nút trong modal */
+.modal-actions {
+  display: flex;
+  justify-content: space-between; /* Điều chỉnh các nút cách nhau */
+  margin-top: 20px;
+}
+
+/* Modal actions buttons */
+.modal-actions button {
+  background-color: #28a745;
+  padding: 15px 30px; /* Tăng kích thước padding */
+  font-size: 15px; /* Tăng kích thước font chữ */
+  border-radius: 8px; /* Cải thiện bo góc */
+  cursor: pointer;
+  width: 38%; /* Đảm bảo các nút chiếm 1/2 chiều rộng */
+  text-align: center;
+}
+
+.modal-actions button.cancel {
+  background-color: #dc3545;
+  margin-left: 10px;
+}
+
+.modal-actions button:hover {
+  opacity: 0.8; /* Thêm hiệu ứng khi hover */
 }
