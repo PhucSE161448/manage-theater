@@ -372,6 +372,12 @@ const App = () => {
       .then((result) => {
         console.log("Thanh toán thành công!", result);
         // Thực hiện hành động sau khi thanh toán thành công, ví dụ: đóng modal, thông báo thành công...
+        // Redirect to the returned URL
+        if (result?.url) {
+          window.location.href = result.url; // Redirect to the URL
+        } else {
+          console.error("URL not found in the response");
+        }
       })
       .catch((error) => {
         console.error("Lỗi khi thanh toán:", error);
@@ -432,6 +438,9 @@ const App = () => {
               <div className="price-item">
                 Giá ghế Hồng <span className="color-box pink"></span>: 150.000
                 VND
+              </div>
+              <div className="price-item">
+                Đã Đặt <span className="color-box gray"></span>
               </div>
             </div>
           </div>

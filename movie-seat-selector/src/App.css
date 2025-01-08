@@ -178,7 +178,6 @@ input[readonly] {
 .color-box {
   width: 30px;
   height: 30px;
-  border-radius: 50%;
   display: inline-block;
   margin-right: 5px; /* Khoảng cách giữa biểu tượng và chữ */
 }
@@ -195,6 +194,9 @@ input[readonly] {
 }
 .color-box.pink {
   background-color: #eb0578;
+}
+.color-box.gray {
+  background-color: gray;
 }
 .seat-layout-container {
   display: flex;
