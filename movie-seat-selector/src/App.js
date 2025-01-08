@@ -51,6 +51,8 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
         let color = "";
         let isHidden = false;
         let isBooked = false;
+        let studentName = null;
+
         if (hiddenSeats[rowChar]?.includes(col)) {
           isHidden = true;
         }
@@ -62,6 +64,7 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
         if (seat) {
           color = seat.seatColor?.color || "";
           isBooked = seat.isBooked;
+          studentName = seat.studentName; // Lấy thông tin StudentName
         }
 
         if (charCols.includes(col)) {
@@ -69,7 +72,7 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
           content = rowChar;
           color = "";
         } else {
-          content = isHidden ? "" : col;
+          content = isHidden ? "" : studentName || col; // Hiển thị StudentName nếu tồn tại
         }
 
         const seatInfo = `${rowChar} - ${col} - ${color}`;
@@ -77,12 +80,15 @@ const SeatLayout = ({ rows, cols, hiddenSeats, charCols, onSeatSelect }) => {
           content = "X";
           className += " x-mark";
         }
-        const seatStyle = isBooked
-          ? { backgroundColor: "gray" } // Màu xám nếu ghế đã được đặt
-          : color === "red"
-          ? { backgroundColor: "red" }
-          : color === "yellow"
-          ? { backgroundColor: "#f5a003" }
+        const seatStyle = color
+          ? {
+              backgroundColor:
+                color === "red"
+                  ? "red"
+                  : color === "yellow"
+                  ? "#f5a003"
+                  : color,
+            }
           : {};
 
         if (!isHidden) {
@@ -163,7 +169,7 @@ const BottomLayout = ({
         let color = "";
         let isBooked = false;
         let isHidden = false;
-
+        let studentName = null;
         if (hiddenSeats[rowChar]?.includes(col)) {
           isHidden = true;
         }
@@ -176,14 +182,15 @@ const BottomLayout = ({
         if (seat) {
           // Nếu ghế có dữ liệu, xác định trạng thái đã đặt và màu sắc
           isBooked = seat.isBooked;
-          color = seat.seatColor?.color || ""; // Màu mặc định nếu không có thông tin màu
+          color = seat.seatColor?.color || "";
+          studentName = seat.studentName;
         }
         if (charCols.includes(col)) {
           className += " char";
           content = rowChar;
           color = "";
         } else {
-          content = isHidden ? "" : col;
+          content = isHidden ? "" : studentName || col;
         }
         const seatInfo = { rowChar, col, color };
         const isSelected = selectedSeats.some(
@@ -197,12 +204,10 @@ const BottomLayout = ({
         }
 
         // Xử lý màu sắc ghế
-        const seatStyle = isBooked
-          ? { backgroundColor: "gray" } // Màu xám nếu ghế đã được đặt
-          : color === "blue"
-          ? { backgroundColor: "#3498db" }
-          : color === "pink"
-          ? { backgroundColor: "#eb0578" }
+        const seatStyle = color
+          ? {
+              backgroundColor: color === "pink" ? "#eb0578" : color,
+            }
           : {};
         // Thêm sự kiện click cho các ghế chưa được đặt và không phải là ký tự
         const handleClick =
@@ -438,9 +443,6 @@ const App = () => {
               <div className="price-item">
                 Giá ghế Hồng <span className="color-box pink"></span>: 150.000
                 VND
-              </div>
-              <div className="price-item">
-                Đã Đặt <span className="color-box gray"></span>
               </div>
             </div>
           </div>
